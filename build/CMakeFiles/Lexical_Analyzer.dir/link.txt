@@ -1,3 +1,3 @@
 E:\stm32cube_clt\STM32CubeCLT_1.15.0\CMake\bin\cmake.exe -E rm -f CMakeFiles\Lexical_Analyzer.dir/objects.a
 D:\mingw64\bin\ar.exe qc CMakeFiles\Lexical_Analyzer.dir/objects.a @CMakeFiles\Lexical_Analyzer.dir\objects1.rsp
-D:\mingw64\bin\gcc.exe -g -Wl,--whole-archive CMakeFiles\Lexical_Analyzer.dir/objects.a -Wl,--no-whole-archive -o Lexical_Analyzer.exe -Wl,--out-implib,libLexical_Analyzer.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\Lexical_Analyzer.dir\linkLibs.rsp
+D:\mingw64\bin\gcc.exe  -g -g -Wl,--whole-archive CMakeFiles\Lexical_Analyzer.dir/objects.a -Wl,--no-whole-archive -o Lexical_Analyzer.exe -Wl,--out-implib,libLexical_Analyzer.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\Lexical_Analyzer.dir\linkLibs.rsp

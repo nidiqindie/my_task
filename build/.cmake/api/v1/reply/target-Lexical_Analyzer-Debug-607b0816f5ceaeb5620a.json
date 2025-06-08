@@ -27,7 +27,7 @@
 			{
 				"command" : 0,
 				"file" : 0,
-				"line" : 5,
+				"line" : 8,
 				"parent" : 0
 			}
 		]
@@ -38,7 +38,7 @@
 			"compileCommandFragments" : 
 			[
 				{
-					"fragment" : "-g"
+					"fragment" : " -g -g"
 				}
 			],
 			"language" : "C",
@@ -54,7 +54,7 @@
 		"commandFragments" : 
 		[
 			{
-				"fragment" : "-g",
+				"fragment" : "-g -g",
 				"role" : "flags"
 			},
 			{

@@ -7,6 +7,7 @@
 #define MAX_TOKEN_LEN 50
 #define if_only_one_error 0
 char A = 0;
+int sum_error_num = 0;
 typedef struct
 {
     char type[MAX_TOKEN_LEN];
@@ -49,6 +50,7 @@ void match(const char *expected_type, const char *expected_value)
 exit(1);
 #else
 A=1;
+sum_error_num ++;
 return;
 #endif
     }
@@ -63,6 +65,7 @@ return;
 exit(1);
 #else
 A=1;
+sum_error_num++;
 if (check("运算符", ":=") )
 {
     current_token_index++;
@@ -91,6 +94,7 @@ void match_type(const char *expected_type)
 exit(1);
 #else
 A=1;
+sum_error_num++;
 return;
 #endif
     }
@@ -104,6 +108,7 @@ return;
 exit(1);
 #else
 A=1;
+sum_error_num++;
 return;
 #endif
     }
@@ -249,11 +254,21 @@ void procedure_declaration()
 void procedure_header()
 {
     match("保留字", "procedure");
-    match_type("标识符");
-    if (check_type("标识符"))
+    int a = 0;
+    while(check_type("标识符"))
     {
-        match("界符", ";");
-        current_token_index++;
+        if (a==0)
+        {
+            a = sum_error_num;
+            match_type("标识符");
+            current_token_index = current_token_index + (sum_error_num - a);
+            a = 1;
+        }
+        else{
+            match("界符", ";");
+            current_token_index++;
+        }
+     
     }
 
     match("界符", ";");
@@ -334,6 +349,7 @@ void condition()
             exit(1);
 #else
             A = 1;
+            sum_error_num++;
 #endif
         }
         expression();
@@ -387,6 +403,7 @@ void factor()
 exit(1);
 #else
 A=1;
+sum_error_num++;
 #endif
     }
 }
@@ -447,7 +464,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "用法: %s <token文件>\n", argv[0]);
         return 1;
     }
-
+    printf("%s",argv[1]);
     load_tokens(argv[1]);
     program();
 
@@ -455,11 +472,12 @@ int main(int argc, char *argv[])
     {
         Token extra = tokens[current_token_index];
         fprintf(stderr, "语法错误: 分析结束后还有未处理的token: %s %s\n", extra.type, extra.value);
-        return 1;
+        sum_error_num++;
     }
   if (A==0)
   {
       printf("语法分析成功! 程序符合PL/0语法规范。\n");
   }
-    return 0;
+  printf("\n*********** \n语法分析结束，一共有%d个错误。\n*********** \n", sum_error_num);
+  return 0;
 }

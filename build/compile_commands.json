@@ -1,13 +1,13 @@
 [
 {
   "directory": "E:/the_all_project/c_project/compile_project/my_task/build",
-  "command": "D:\\mingw64\\bin\\gcc.exe   -g -o CMakeFiles\\Lexical_Analyzer.dir\\Lexical_Analyzer.c.obj -c E:\\the_all_project\\c_project\\compile_project\\my_task\\Lexical_Analyzer.c",
+  "command": "D:\\mingw64\\bin\\gcc.exe    -g -g -o CMakeFiles\\Lexical_Analyzer.dir\\Lexical_Analyzer.c.obj -c E:\\the_all_project\\c_project\\compile_project\\my_task\\Lexical_Analyzer.c",
   "file": "E:/the_all_project/c_project/compile_project/my_task/Lexical_Analyzer.c",
   "output": "CMakeFiles/Lexical_Analyzer.dir/Lexical_Analyzer.c.obj"
 },
 {
   "directory": "E:/the_all_project/c_project/compile_project/my_task/build",
-  "command": "D:\\mingw64\\bin\\gcc.exe   -g -o CMakeFiles\\parser.dir\\my_task.c.obj -c E:\\the_all_project\\c_project\\compile_project\\my_task\\my_task.c",
+  "command": "D:\\mingw64\\bin\\gcc.exe    -g -g -o CMakeFiles\\parser.dir\\my_task.c.obj -c E:\\the_all_project\\c_project\\compile_project\\my_task\\my_task.c",
   "file": "E:/the_all_project/c_project/compile_project/my_task/my_task.c",
   "output": "CMakeFiles/parser.dir/my_task.c.obj"
 }

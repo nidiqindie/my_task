@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 project(Lexical_Analyzer)
+# 设置调试模式
+set(CMAKE_BUILD_TYPE Debug)  # 强制使用调试模式
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g")  # 添加调试符号
 
 # 添加源文件
 add_executable(${PROJECT_NAME} Lexical_Analyzer.c)
