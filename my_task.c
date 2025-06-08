@@ -26,7 +26,7 @@ void const_definition();
 void var_declaration();
 void procedure_declaration();
 void procedure_header();
-void statement();
+int statement();
 void assignment_statement();
 void compound_statement();
 void condition();
@@ -47,11 +47,11 @@ void match(const char *expected_type, const char *expected_value)
     {
         fprintf(stderr, "语法错误: 预期 %s %s，但遇到文件结束\n", expected_type, expected_value);
 #if if_only_one_error
-exit(1);
+        exit(1);
 #else
-A=1;
-sum_error_num ++;
-return;
+        A = 1;
+        sum_error_num++;
+        return;
 #endif
     }
 
@@ -62,24 +62,23 @@ return;
         fprintf(stderr, "语法错误: 第 %d 个token，预期 %s %s，但遇到 %s %s\n",
                 current_token_index + 1, expected_type, expected_value, current.type, current.value);
 #if if_only_one_error
-exit(1);
+        exit(1);
 #else
-A=1;
-sum_error_num++;
-if (check("运算符", ":=") )
-{
-    current_token_index++;
-}
-if (strcmp(":=", expected_value) == 0)
-{
-    if (strcmp("=", current.value) == 0)
-    {
-        current_token_index++;
-    }
-}
+        A = 1;
+        sum_error_num++;
+        if (check("运算符", ":="))
+        {
+            current_token_index++;
+        }
+        if (strcmp(":=", expected_value) == 0)
+        {
+            if (strcmp("=", current.value) == 0)
+            {
+                current_token_index++;
+            }
+        }
 
-    
-return;
+        return;
 #endif
     }
     current_token_index++;
@@ -91,11 +90,11 @@ void match_type(const char *expected_type)
     {
         fprintf(stderr, "语法错误: 预期 %s，但遇到文件结束\n", expected_type);
 #if if_only_one_error
-exit(1);
+        exit(1);
 #else
-A=1;
-sum_error_num++;
-return;
+        A = 1;
+        sum_error_num++;
+        return;
 #endif
     }
 
@@ -105,11 +104,11 @@ return;
         fprintf(stderr, "语法错误: 第 %d 个token，预期 %s，但遇到 %s %s\n",
                 current_token_index + 1, expected_type, current.type, current.value);
 #if if_only_one_error
-exit(1);
+        exit(1);
 #else
-A=1;
-sum_error_num++;
-return;
+        A = 1;
+        sum_error_num++;
+        return;
 #endif
     }
     current_token_index++;
@@ -129,7 +128,16 @@ int check_type(const char *type)
         return 0;
     return strcmp(tokens[current_token_index].type, type) == 0;
 }
-
+// 检查上一个token是否匹配指定类型和值
+int check_prev_token(const char *type, const char *value)
+{
+    if (current_token_index - 1 >= 0)
+    {
+        Token prev = tokens[current_token_index - 1];
+        return strcmp(prev.type, type) == 0 && strcmp(prev.value, value) == 0;
+    }
+    return 0;
+}
 void load_tokens(const char *filename)
 {
     FILE *file = fopen(filename, "r");
@@ -137,7 +145,6 @@ void load_tokens(const char *filename)
     {
         perror("打开文件失败");
         exit(1);
-
     }
 
     char line[100];
@@ -255,54 +262,69 @@ void procedure_header()
 {
     match("保留字", "procedure");
     int a = 0;
-    while(check_type("标识符"))
+    if (check("保留字", "procedure"))
     {
-        if (a==0)
+        a = sum_error_num;
+        match_type("标识符");
+        current_token_index = current_token_index + (sum_error_num - a);
+        a = 0;
+    }
+
+    while (check_type("标识符"))
+    {
+        if (a == 0)
         {
             a = sum_error_num;
             match_type("标识符");
             current_token_index = current_token_index + (sum_error_num - a);
             a = 1;
         }
-        else{
+        else
+        {
             match("界符", ";");
             current_token_index++;
         }
-     
     }
 
     match("界符", ";");
 }
-
-void statement()
+// 过程函数，返回值表示后面本应不应该有分号，0为不应该，1为应该。
+int statement()
 {
     if (check_type("标识符"))
     {
         assignment_statement();
+        return 1;
     }
     else if (check("保留字", "if"))
     {
         condition_statement();
+        return 0;
     }
     else if (check("保留字", "while"))
     {
         while_statement();
+        return 0;
     }
     else if (check("保留字", "call"))
     {
         call_statement();
+        return 1;
     }
     else if (check("保留字", "read"))
     {
         read_statement();
+        return 1;
     }
     else if (check("保留字", "write"))
     {
         write_statement();
+        return 1;
     }
     else if (check("保留字", "begin"))
     {
         compound_statement();
+        return 0;
     }
     // 空语句不做任何处理
 }
@@ -316,14 +338,64 @@ void assignment_statement()
 
 void compound_statement()
 {
+    // match("保留字", "begin");
+    // statement();
+    // while (check("界符", ";"))
+    // {
+    //     match("界符", ";");
+    //     statement();
+    // }
+    // match("保留字", "end");
+
     match("保留字", "begin");
+    // 在当前语句后检查是否还有下一条语句
     statement();
-    while (check("界符", ";"))
+    while (1)
     {
-        match("界符", ";");
-        statement();
+        if (check("界符", ";"))
+        {
+            // 如果有分号，继续解析下一条语句
+            match("界符", ";");
+            statement();
+        }
+        else if (check("保留字", "end"))
+        {
+            // 如果是最后一个语句，前面不能有分号
+            if (!check_prev_token("界符", ";") && !check_prev_token("保留字", "end"))
+            {
+                printf("语法错误: 缺少分号\n");
+                sum_error_num++;
+            }
+            match("保留字", "end");
+            break;
+        }
+        else
+        {
+            // 如果没有分号且不是end，可以考虑允许继续解析下一条语句（容错处理）
+            // 或者报告错误并尝试恢复
+            printf("语法错误: 期待 ';' 或 'end'，但遇到 '%s %s'\n",
+                   tokens[current_token_index].type, tokens[current_token_index].value);
+            sum_error_num++;
+            // 尝试找到下一个可能的语句开始点
+            while (current_token_index < token_count &&
+                   !check_type("保留字") &&
+                   strcmp(tokens[current_token_index].value, "end") != 0)
+            {
+                current_token_index++;
+            }
+            if (current_token_index < token_count &&
+                strcmp(tokens[current_token_index].value, "end") == 0)
+            {
+                match("保留字", "end");
+                break;
+            }
+            else
+            {
+                // 如果没有找到end，继续解析下一条语句
+                statement();
+            }
+        }
     }
-    match("保留字", "end");
 }
 
 void condition()
@@ -400,10 +472,10 @@ void factor()
     {
         fprintf(stderr, "语法错误: 预期标识符、无符号整数或表达式\n");
 #if if_only_one_error
-exit(1);
+        exit(1);
 #else
-A=1;
-sum_error_num++;
+        A = 1;
+        sum_error_num++;
 #endif
     }
 }
@@ -464,7 +536,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "用法: %s <token文件>\n", argv[0]);
         return 1;
     }
-    printf("%s",argv[1]);
+    printf("%s", argv[1]);
     load_tokens(argv[1]);
     program();
 
@@ -474,10 +546,10 @@ int main(int argc, char *argv[])
         fprintf(stderr, "语法错误: 分析结束后还有未处理的token: %s %s\n", extra.type, extra.value);
         sum_error_num++;
     }
-  if (A==0)
-  {
-      printf("语法分析成功! 程序符合PL/0语法规范。\n");
-  }
-  printf("\n*********** \n语法分析结束，一共有%d个错误。\n*********** \n", sum_error_num);
-  return 0;
+    if (A == 0)
+    {
+        printf("语法分析成功! 程序符合PL/0语法规范。\n");
+    }
+    printf("\n*********** \n语法分析结束，一共有%d个错误。\n*********** \n", sum_error_num);
+    return 0;
 }
