@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.10)
+project(Lexical_Analyzer)
+
+# 添加源文件
+add_executable(${PROJECT_NAME} Lexical_Analyzer.c)
+add_executable(parser my_task.c)

@@ -1,0 +1,4 @@
+E:/the_all_project/c_project/compile_project/my_task/build/CMakeFiles/Lexical_Analyzer.dir
+E:/the_all_project/c_project/compile_project/my_task/build/CMakeFiles/parser.dir
+E:/the_all_project/c_project/compile_project/my_task/build/CMakeFiles/edit_cache.dir
+E:/the_all_project/c_project/compile_project/my_task/build/CMakeFiles/rebuild_cache.dir

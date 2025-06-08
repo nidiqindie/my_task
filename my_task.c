@@ -1,0 +1,465 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <windows.h>
+#define MAX_TOKENS 500
+#define MAX_TOKEN_LEN 50
+#define if_only_one_error 0
+char A = 0;
+typedef struct
+{
+    char type[MAX_TOKEN_LEN];
+    char value[MAX_TOKEN_LEN];
+} Token;
+
+Token tokens[MAX_TOKENS];
+int token_count = 0;
+int current_token_index = 0;
+
+// 函数声明
+void program();
+void block();
+void const_declaration();
+void const_definition();
+void var_declaration();
+void procedure_declaration();
+void procedure_header();
+void statement();
+void assignment_statement();
+void compound_statement();
+void condition();
+void expression();
+void term();
+void factor();
+void condition_statement();
+void call_statement();
+void while_statement();
+void read_statement();
+void write_statement();
+int check(const char *type, const char *value);
+int check_type(const char *type);
+// 辅助函数
+void match(const char *expected_type, const char *expected_value)
+{
+    if (current_token_index >= token_count)
+    {
+        fprintf(stderr, "语法错误: 预期 %s %s，但遇到文件结束\n", expected_type, expected_value);
+#if if_only_one_error
+exit(1);
+#else
+A=1;
+return;
+#endif
+    }
+
+    Token current = tokens[current_token_index];
+    if (strcmp(current.type, expected_type) != 0 ||
+        (expected_value != NULL && strcmp(current.value, expected_value) != 0))
+    {
+        fprintf(stderr, "语法错误: 第 %d 个token，预期 %s %s，但遇到 %s %s\n",
+                current_token_index + 1, expected_type, expected_value, current.type, current.value);
+#if if_only_one_error
+exit(1);
+#else
+A=1;
+if (check("运算符", ":=") )
+{
+    current_token_index++;
+}
+if (strcmp(":=", expected_value) == 0)
+{
+    if (strcmp("=", current.value) == 0)
+    {
+        current_token_index++;
+    }
+}
+
+    
+return;
+#endif
+    }
+    current_token_index++;
+}
+
+void match_type(const char *expected_type)
+{
+    if (current_token_index >= token_count)
+    {
+        fprintf(stderr, "语法错误: 预期 %s，但遇到文件结束\n", expected_type);
+#if if_only_one_error
+exit(1);
+#else
+A=1;
+return;
+#endif
+    }
+
+    Token current = tokens[current_token_index];
+    if (strcmp(current.type, expected_type) != 0)
+    {
+        fprintf(stderr, "语法错误: 第 %d 个token，预期 %s，但遇到 %s %s\n",
+                current_token_index + 1, expected_type, current.type, current.value);
+#if if_only_one_error
+exit(1);
+#else
+A=1;
+return;
+#endif
+    }
+    current_token_index++;
+}
+
+int check(const char *type, const char *value)
+{
+    if (current_token_index >= token_count)
+        return 0;
+    Token current = tokens[current_token_index];
+    return strcmp(current.type, type) == 0 && (value == NULL || strcmp(current.value, value) == 0);
+}
+
+int check_type(const char *type)
+{
+    if (current_token_index >= token_count)
+        return 0;
+    return strcmp(tokens[current_token_index].type, type) == 0;
+}
+
+void load_tokens(const char *filename)
+{
+    FILE *file = fopen(filename, "r");
+    if (!file)
+    {
+        perror("打开文件失败");
+        exit(1);
+
+    }
+
+    char line[100];
+    while (fgets(line, sizeof(line), file))
+    {
+        if (line[0] != '(')
+            continue;
+
+        char *type_start = strchr(line, ',') - 1;
+        char *value_end = strrchr(line, ')');
+
+        if (!type_start || !value_end)
+        {
+            fprintf(stderr, "无效的token格式: %s", line);
+            continue;
+        }
+
+        // 提取类型
+        char *comma = strchr(line, ',');
+        *comma = '\0';
+        char *type = line + 1;
+
+        // 提取值
+        char *value = comma + 1;
+        *value_end = '\0';
+
+        // 去除值中的空格
+        if (value[0] == ' ')
+            value++;
+
+        // 存储token
+        strncpy(tokens[token_count].type, type, MAX_TOKEN_LEN - 1);
+        strncpy(tokens[token_count].value, value, MAX_TOKEN_LEN - 1);
+        tokens[token_count].type[MAX_TOKEN_LEN - 1] = '\0';
+        tokens[token_count].value[MAX_TOKEN_LEN - 1] = '\0';
+
+        token_count++;
+        if (token_count >= MAX_TOKENS)
+        {
+            fprintf(stderr, "超出最大token数量限制\n");
+            break;
+        }
+    }
+    fclose(file);
+}
+
+// 语法规则实现
+void program()
+{
+    block();
+    match("界符", ".");
+}
+
+void block()
+{
+    if (check("保留字", "const"))
+    {
+        const_declaration();
+    }
+    if (check("保留字", "var"))
+    {
+        var_declaration();
+    }
+    while (check("保留字", "procedure"))
+    {
+        procedure_declaration();
+    }
+    statement();
+}
+
+void const_declaration()
+{
+    match("保留字", "const");
+    const_definition();
+    while (check("界符", ","))
+    {
+        match("界符", ",");
+        const_definition();
+    }
+    match("界符", ";");
+}
+
+void const_definition()
+{
+    match_type("标识符");
+    match("运算符", "=");
+    match_type("无符号整数");
+}
+
+void var_declaration()
+{
+    match("保留字", "var");
+    match_type("标识符");
+    while (check("界符", ","))
+    {
+        match("界符", ",");
+        match_type("标识符");
+        if (check_type("标识符"))
+        {
+            match("界符", ",");
+            current_token_index++;
+        }
+    }
+    match("界符", ";");
+}
+
+void procedure_declaration()
+{
+    procedure_header();
+    block();
+    match("界符", ";");
+}
+
+void procedure_header()
+{
+    match("保留字", "procedure");
+    match_type("标识符");
+    if (check_type("标识符"))
+    {
+        match("界符", ";");
+        current_token_index++;
+    }
+
+    match("界符", ";");
+}
+
+void statement()
+{
+    if (check_type("标识符"))
+    {
+        assignment_statement();
+    }
+    else if (check("保留字", "if"))
+    {
+        condition_statement();
+    }
+    else if (check("保留字", "while"))
+    {
+        while_statement();
+    }
+    else if (check("保留字", "call"))
+    {
+        call_statement();
+    }
+    else if (check("保留字", "read"))
+    {
+        read_statement();
+    }
+    else if (check("保留字", "write"))
+    {
+        write_statement();
+    }
+    else if (check("保留字", "begin"))
+    {
+        compound_statement();
+    }
+    // 空语句不做任何处理
+}
+
+void assignment_statement()
+{
+    match_type("标识符");
+    match("运算符", ":=");
+    expression();
+}
+
+void compound_statement()
+{
+    match("保留字", "begin");
+    statement();
+    while (check("界符", ";"))
+    {
+        match("界符", ";");
+        statement();
+    }
+    match("保留字", "end");
+}
+
+void condition()
+{
+    if (check("保留字", "odd"))
+    {
+        match("保留字", "odd");
+        expression();
+    }
+    else
+    {
+        expression();
+        if (check("运算符", "=") || check("运算符", "#") ||
+            check("运算符", "<") || check("运算符", "<=") ||
+            check("运算符", ">") || check("运算符", ">="))
+        {
+            current_token_index++;
+        }
+        else
+        {
+            fprintf(stderr, "语法错误: 预期关系运算符\n");
+#if if_only_one_error
+            exit(1);
+#else
+            A = 1;
+#endif
+        }
+        expression();
+    }
+}
+
+void expression()
+{
+    if (check("运算符", "+") || check("运算符", "-"))
+    {
+        current_token_index++;
+    }
+    term();
+    while (check("运算符", "+") || check("运算符", "-"))
+    {
+        current_token_index++;
+        term();
+    }
+}
+
+void term()
+{
+    factor();
+    while (check("运算符", "*") || check("运算符", "/"))
+    {
+        current_token_index++;
+        factor();
+    }
+}
+
+void factor()
+{
+    if (check_type("标识符"))
+    {
+        match_type("标识符");
+    }
+    else if (check_type("无符号整数"))
+    {
+        match_type("无符号整数");
+    }
+    else if (check("界符", "("))
+    {
+        match("界符", "(");
+        expression();
+        match("界符", ")");
+    }
+    else
+    {
+        fprintf(stderr, "语法错误: 预期标识符、无符号整数或表达式\n");
+#if if_only_one_error
+exit(1);
+#else
+A=1;
+#endif
+    }
+}
+
+void condition_statement()
+{
+    match("保留字", "if");
+    condition();
+    match("保留字", "then");
+    statement();
+}
+
+void call_statement()
+{
+    match("保留字", "call");
+    match_type("标识符");
+}
+
+void while_statement()
+{
+    match("保留字", "while");
+    condition();
+    match("保留字", "do");
+    statement();
+}
+
+void read_statement()
+{
+    match("保留字", "read");
+    match("界符", "(");
+    match_type("标识符");
+    while (check("界符", ","))
+    {
+        match("界符", ",");
+        match_type("标识符");
+    }
+    match("界符", ")");
+}
+
+void write_statement()
+{
+    match("保留字", "write");
+    match("界符", "(");
+    expression();
+    while (check("界符", ","))
+    {
+        match("界符", ",");
+        expression();
+    }
+    match("界符", ")");
+}
+
+int main(int argc, char *argv[])
+{
+    SetConsoleOutputCP(CP_UTF8);
+    if (argc != 2)
+    {
+        fprintf(stderr, "用法: %s <token文件>\n", argv[0]);
+        return 1;
+    }
+
+    load_tokens(argv[1]);
+    program();
+
+    if (current_token_index < token_count)
+    {
+        Token extra = tokens[current_token_index];
+        fprintf(stderr, "语法错误: 分析结束后还有未处理的token: %s %s\n", extra.type, extra.value);
+        return 1;
+    }
+  if (A==0)
+  {
+      printf("语法分析成功! 程序符合PL/0语法规范。\n");
+  }
+    return 0;
+}
